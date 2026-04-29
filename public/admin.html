@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>計分後臺</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #222; color: white; }
+        .player-card { border: 1px solid #555; padding: 10px; margin: 10px 0; display: flex; align-items: center; gap: 15px; }
+        input { padding: 5px; }
+    </style>
+</head>
+<body>
+    <h2>🏆 智力王計分後臺</h2>
+    <div style="background: #333; padding: 15px; border-radius: 8px;">
+        <input type="text" id="newName" placeholder="玩家名字">
+        <input type="text" id="newAvatar" placeholder="頭像網址 (URL)">
+        <button onclick="addPlayer()">新增/更新玩家</button>
+    </div>
+
+    <div id="playerList"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let localPlayers = {};
+
+        socket.on('updateData', (data) => {
+            localPlayers = data;
+            render();
+        });
+
+        function render() {
+            const list = document.getElementById('playerList');
+            list.innerHTML = "";
+            for (let name in localPlayers) {
+                const p = localPlayers[name];
+                list.innerHTML += `
+                    <div class="player-card">
+                        <img src="${p.avatar}" width="50" height="50">
+                        <strong>${name}</strong>
+                        <span>分數: ${p.score}</span>
+                        <button onclick="changeScore('${name}', 10)">+10</button>
+                        <button onclick="changeScore('${name}', -10)">-10</button>
+                        <button onclick="deleteP('${name}')" style="color:red">刪除</button>
+                    </div>`;
+            }
+        }
+
+        function addPlayer() {
+            const name = document.getElementById('newName').value;
+            const avatar = document.getElementById('newAvatar').value;
+            if(!name) return;
+            socket.emit('editPlayer', { name, score: 0, avatar });
+        }
+
+        function changeScore(name, delta) {
+            localPlayers[name].score += delta;
+            socket.emit('editPlayer', { name, ...localPlayers[name] });
+        }
+
+        function deleteP(name) {
+            socket.emit('deletePlayer', name);
+        }
+    </script>
+</body>
+</html>
