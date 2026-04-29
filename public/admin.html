@@ -1,44 +1,148 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>智力王 - 專業管理後臺</title>
+    <title>智力王 - 響應式管理後臺</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: 'Microsoft JhengHei', sans-serif; padding: 30px; background: #1a1a1a; color: white; }
-        .control-panel { background: #333; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #555; }
-        .player-item { 
-            display: flex; align-items: center; background: #444; 
-            padding: 15px; margin: 10px 0; border-radius: 8px; gap: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #333;
+            --primary-blue: #007bff;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
         }
-        input { padding: 8px; border-radius: 4px; border: 1px solid #666; font-size: 14px; background: #f9f9f9; }
-        button { padding: 8px 12px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; transition: 0.2s; }
-        button:hover { opacity: 0.8; transform: scale(1.05); }
-        
-        .btn-add { background: #28a745; color: white; }
-        .btn-reset-all { background: #ffc107; color: #333; margin-left: 10px; }
-        .btn-p20 { background: #0056b3; color: white; }
-        .btn-p10 { background: #007bff; color: white; }
-        .btn-p5 { background: #17a2b8; color: white; }
-        .btn-m { background: #dc3545; color: white; }
-        .btn-manual { background: #6f42c1; color: white; } /* 紫色代表手動 */
-        .btn-zero { background: #6c757d; color: white; }
-        .btn-del { background: #343a40; color: #aaa; margin-left: auto; }
 
-        .score-display { font-size: 28px; width: 100px; text-align: center; color: #ffd700; font-family: 'Courier New', monospace; font-weight: bold; }
-        img { width: 60px; height: 60px; border-radius: 50%; background: #eee; object-fit: cover; border: 2px solid #777; }
-        .btn-group { display: flex; gap: 8px; align-items: center; }
-        .manual-input-box { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 4px; }
+        body { 
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; 
+            padding: 15px; 
+            background: var(--bg-color); 
+            color: white; 
+            margin: 0;
+        }
+
+        h2 { text-align: center; color: #ffd700; }
+
+        /* 頂部控製麵板 */
+        .control-panel { 
+            background: var(--card-bg); 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 20px; 
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-panel input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #555;
+            font-size: 16px;
+        }
+
+        /* 玩家清單卡片 */
+        .player-item { 
+            background: #444; 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 12px; 
+            display: flex;
+            flex-direction: column; /* 手機優先：直排 */
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        /* 桌面版橫排佈局 */
+        @media (min-width: 768px) {
+            .player-item {
+                flex-direction: row;
+                align-items: center;
+            }
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 180px;
+        }
+
+        .player-info img { 
+            width: 55px; height: 55px; 
+            border-radius: 50%; 
+            border: 2px solid gold;
+            object-fit: cover;
+        }
+
+        .player-name { font-size: 18px; font-weight: bold; flex: 1; }
+
+        .score-display { 
+            font-size: 32px; 
+            color: #ffd700; 
+            font-family: 'Courier New', monospace; 
+            font-weight: bold;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        /* 按鈕羣組響應式 */
+        .btn-group { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+            justify-content: center;
+            flex: 2;
+        }
+
+        button { 
+            padding: 10px 14px; 
+            cursor: pointer; 
+            border-radius: 6px; 
+            border: none; 
+            font-weight: bold; 
+            font-size: 14px;
+            min-width: 50px;
+            transition: 0.2s;
+        }
+
+        button:active { transform: scale(0.95); }
+
+        .btn-p { background: var(--primary-blue); color: white; }
+        .btn-m { background: var(--danger-red); color: white; }
+        .btn-manual { background: #6f42c1; color: white; }
+        .btn-zero { background: #6c757d; color: white; }
+        .btn-del { background: #222; color: #888; }
+
+        .manual-input-box { 
+            display: flex; 
+            gap: 5px; 
+            background: rgba(0,0,0,0.2); 
+            padding: 5px; 
+            border-radius: 6px;
+            align-items: center;
+        }
+
+        .manual-input-box input {
+            width: 60px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #666;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <h2>🏆 智力王直播後臺 (支援手動輸入)</h2>
+    <h2>🏆 智力王直播控臺</h2>
     
     <div class="control-panel">
         <input type="text" id="newName" placeholder="玩家名字">
-        <input type="text" id="newAvatar" placeholder="頭像網址 (可留空)">
-        <button class="btn-add" onclick="addPlayer()">新增玩家 (預設100)</button>
-        <button class="btn-reset-all" onclick="if(confirm('確定要清空所有資料？')) socket.emit('resetAll')">清空全場</button>
+        <input type="text" id="newAvatar" placeholder="頭像網址 (可空)">
+        <button class="btn-p" style="background: var(--success-green);" onclick="addPlayer()">新增玩家 (100)</button>
+        <button class="btn-zero" onclick="if(confirm('確定清空全場？')) socket.emit('resetAll')">清空</button>
     </div>
 
     <div id="playerList"></div>
@@ -58,38 +162,40 @@
                 const p = data[name];
                 list.innerHTML += `
                     <div class="player-item">
-                        <img src="${p.avatar}">
-                        <div style="width: 130px;"><strong>${name}</strong></div>
+                        <div class="player-info">
+                            <img src="${p.avatar}">
+                            <div class="player-name">${name}</div>
+                        </div>
+
                         <div class="score-display">${p.score}</div>
                         
                         <div class="btn-group">
-                            <button class="btn-p20" onclick="updateScore('${name}', 20)">+20</button>
-                            <button class="btn-p10" onclick="updateScore('${name}', 10)">+10</button>
-                            <button class="btn-p5" onclick="updateScore('${name}', 5)">+5</button>
+                            <button class="btn-p" onclick="updateScore('${name}', 20)">+20</button>
+                            <button class="btn-p" onclick="updateScore('${name}', 10)">+10</button>
+                            <button class="btn-p" onclick="updateScore('${name}', 5)">+5</button>
                             <button class="btn-m" onclick="updateScore('${name}', -5)">-5</button>
                             <button class="btn-m" onclick="updateScore('${name}', -10)">-10</button>
                             <button class="btn-m" onclick="updateScore('${name}', -20)">-20</button>
                             
                             <div class="manual-input-box">
-                                <input type="number" id="manual-${name}" placeholder="輸入分數" style="width: 70px;">
-                                <button class="btn-manual" onclick="manualUpdate('${name}')">更新</button>
+                                <input type="number" id="manual-${name}" placeholder="分數">
+                                <button class="btn-manual" onclick="manualUpdate('${name}')">更</button>
                             </div>
-
                             <button class="btn-zero" onclick="setScore('${name}', 100)">回100</button>
                         </div>
 
-                        <button class="btn-del" onclick="deletePlayer('${name}')">刪除</button>
+                        <button class="btn-del" onclick="deletePlayer('${name}')">刪</button>
                     </div>`;
             }
         });
 
         function addPlayer() {
-            const nameInput = document.getElementById('newName');
-            const name = nameInput.value.trim();
+            const nameEl = document.getElementById('newName');
+            const name = nameEl.value.trim();
             const avatar = document.getElementById('newAvatar').value;
-            if(!name) return alert("請輸入名字");
+            if(!name) return;
             socket.emit('editPlayer', { name, score: 100, avatar, isNew: true });
-            nameInput.value = "";
+            nameEl.value = "";
             document.getElementById('newAvatar').value = "";
         }
 
@@ -98,26 +204,19 @@
             socket.emit('editPlayer', { name, score: p.score + delta, avatar: p.avatar, isNew: false });
         }
 
-        // 手動輸入分數邏輯
         function manualUpdate(name) {
-            const inputField = document.getElementById(`manual-${name}`);
-            const val = parseInt(inputField.value);
-            if (isNaN(val)) return alert("請輸入有效的數字");
-            
-            const p = currentPlayers[name];
-            socket.emit('editPlayer', { name, score: val, avatar: p.avatar, isNew: false });
-            inputField.value = ""; // 清空輸入框
+            const val = parseInt(document.getElementById(`manual-${name}`).value);
+            if (isNaN(val)) return;
+            socket.emit('editPlayer', { name, score: val, avatar: currentPlayers[name].avatar, isNew: false });
+            document.getElementById(`manual-${name}`).value = "";
         }
 
         function setScore(name, target) {
-            const p = currentPlayers[name];
-            socket.emit('editPlayer', { name, score: target, avatar: p.avatar, isNew: false });
+            socket.emit('editPlayer', { name, score: target, avatar: currentPlayers[name].avatar, isNew: false });
         }
 
         function deletePlayer(name) {
-            if(confirm(`確定刪除玩家 ${name}？`)) {
-                socket.emit('deletePlayer', name);
-            }
+            if(confirm(`刪除 ${name}？`)) socket.emit('deletePlayer', name);
         }
     </script>
 </body>
