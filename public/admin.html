@@ -11,7 +11,7 @@
             padding: 15px; margin: 10px 0; border-radius: 8px; gap: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        input { padding: 10px; border-radius: 4px; border: none; font-size: 16px; }
+        input { padding: 8px; border-radius: 4px; border: 1px solid #666; font-size: 14px; background: #f9f9f9; }
         button { padding: 8px 12px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; transition: 0.2s; }
         button:hover { opacity: 0.8; transform: scale(1.05); }
         
@@ -21,16 +21,18 @@
         .btn-p10 { background: #007bff; color: white; }
         .btn-p5 { background: #17a2b8; color: white; }
         .btn-m { background: #dc3545; color: white; }
+        .btn-manual { background: #6f42c1; color: white; } /* 紫色代表手動 */
         .btn-zero { background: #6c757d; color: white; }
         .btn-del { background: #343a40; color: #aaa; margin-left: auto; }
 
         .score-display { font-size: 28px; width: 100px; text-align: center; color: #ffd700; font-family: 'Courier New', monospace; font-weight: bold; }
         img { width: 60px; height: 60px; border-radius: 50%; background: #eee; object-fit: cover; border: 2px solid #777; }
         .btn-group { display: flex; gap: 8px; align-items: center; }
+        .manual-input-box { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 4px; }
     </style>
 </head>
 <body>
-    <h2>🏆 智力王直播後臺 (預設100分版)</h2>
+    <h2>🏆 智力王直播後臺 (支援手動輸入)</h2>
     
     <div class="control-panel">
         <input type="text" id="newName" placeholder="玩家名字">
@@ -64,10 +66,15 @@
                             <button class="btn-p20" onclick="updateScore('${name}', 20)">+20</button>
                             <button class="btn-p10" onclick="updateScore('${name}', 10)">+10</button>
                             <button class="btn-p5" onclick="updateScore('${name}', 5)">+5</button>
-                            <span style="color: #666; margin: 0 5px;">|</span>
                             <button class="btn-m" onclick="updateScore('${name}', -5)">-5</button>
                             <button class="btn-m" onclick="updateScore('${name}', -10)">-10</button>
                             <button class="btn-m" onclick="updateScore('${name}', -20)">-20</button>
+                            
+                            <div class="manual-input-box">
+                                <input type="number" id="manual-${name}" placeholder="輸入分數" style="width: 70px;">
+                                <button class="btn-manual" onclick="manualUpdate('${name}')">更新</button>
+                            </div>
+
                             <button class="btn-zero" onclick="setScore('${name}', 100)">回100</button>
                         </div>
 
@@ -77,18 +84,29 @@
         });
 
         function addPlayer() {
-            const name = document.getElementById('newName').value;
+            const nameInput = document.getElementById('newName');
+            const name = nameInput.value.trim();
             const avatar = document.getElementById('newAvatar').value;
             if(!name) return alert("請輸入名字");
-            // 傳送 isNew: true 讓後端給 100 分
             socket.emit('editPlayer', { name, score: 100, avatar, isNew: true });
-            document.getElementById('newName').value = "";
+            nameInput.value = "";
             document.getElementById('newAvatar').value = "";
         }
 
         function updateScore(name, delta) {
             const p = currentPlayers[name];
             socket.emit('editPlayer', { name, score: p.score + delta, avatar: p.avatar, isNew: false });
+        }
+
+        // 手動輸入分數邏輯
+        function manualUpdate(name) {
+            const inputField = document.getElementById(`manual-${name}`);
+            const val = parseInt(inputField.value);
+            if (isNaN(val)) return alert("請輸入有效的數字");
+            
+            const p = currentPlayers[name];
+            socket.emit('editPlayer', { name, score: val, avatar: p.avatar, isNew: false });
+            inputField.value = ""; // 清空輸入框
         }
 
         function setScore(name, target) {
