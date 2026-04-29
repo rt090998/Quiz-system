@@ -16,14 +16,16 @@ io.on('connection', (socket) => {
     // 新連線時發送現有數據
     socket.emit('updateData', players);
 
-    // 處理新增或修改分數
+// ... 前面代碼不變 ...
     socket.on('editPlayer', (data) => {
         players[data.name] = {
-            score: parseInt(data.score),
+            // 如果是新玩家（原本沒分），預設給 100 分，否則保留傳入的分數
+            score: data.isNew ? 100 : parseInt(data.score),
             avatar: data.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=" + data.name
         };
         io.emit('updateData', players);
     });
+// ... 後面代碼不變 ...
 
     // 處理刪除玩家
     socket.on('deletePlayer', (name) => {
