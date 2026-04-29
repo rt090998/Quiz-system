@@ -11,7 +11,7 @@ const io = new Server(server);
 let players = {};
 
 // Google Sheet Web App URL (記得換成你部署嗰條)
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbw2gqPFDXCt-on9QPPfVZQtPQfa2wfek2aSHd146SwnoLcaXnNxl5KIeNnZm0POhT2q/exec";
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzL9HML3uzz4CxB3_G9y51qGIDhCSal1DKMhkWMyPf7DmIG-35OxmoRDmSuuNB6iM7s/exec";
 
 app.use(express.static(path.join(__dirname, 'public')));
 
