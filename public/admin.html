@@ -15,28 +15,28 @@
         button { padding: 8px 12px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; transition: 0.2s; }
         button:hover { opacity: 0.8; transform: scale(1.05); }
         
-        /* 掣嘅顏色設定 */
         .btn-add { background: #28a745; color: white; }
         .btn-reset-all { background: #ffc107; color: #333; margin-left: 10px; }
-        .btn-plus { background: #007bff; color: white; }
-        .btn-plus-big { background: #0056b3; color: white; border: 1px solid #fff; }
-        .btn-minus { background: #dc3545; color: white; }
+        .btn-p20 { background: #0056b3; color: white; }
+        .btn-p10 { background: #007bff; color: white; }
+        .btn-p5 { background: #17a2b8; color: white; }
+        .btn-m { background: #dc3545; color: white; }
         .btn-zero { background: #6c757d; color: white; }
         .btn-del { background: #343a40; color: #aaa; margin-left: auto; }
 
-        .score-display { font-size: 24px; width: 100px; text-align: center; color: #ffd700; font-family: 'Courier New', monospace; }
+        .score-display { font-size: 28px; width: 100px; text-align: center; color: #ffd700; font-family: 'Courier New', monospace; font-weight: bold; }
         img { width: 60px; height: 60px; border-radius: 50%; background: #eee; object-fit: cover; border: 2px solid #777; }
-        .btn-group { display: flex; gap: 5px; align-items: center; }
+        .btn-group { display: flex; gap: 8px; align-items: center; }
     </style>
 </head>
 <body>
-    <h2>🏆 智力王直播後臺 - 強化版</h2>
+    <h2>🏆 智力王直播後臺 (預設100分版)</h2>
     
     <div class="control-panel">
         <input type="text" id="newName" placeholder="玩家名字">
         <input type="text" id="newAvatar" placeholder="頭像網址 (可留空)">
-        <button class="btn-add" onclick="addPlayer()">新增玩家</button>
-        <button class="btn-reset-all" onclick="if(confirm('確定要清空所有玩家同分數？')) socket.emit('resetAll')">清空全場</button>
+        <button class="btn-add" onclick="addPlayer()">新增玩家 (預設100)</button>
+        <button class="btn-reset-all" onclick="if(confirm('確定要清空所有資料？')) socket.emit('resetAll')">清空全場</button>
     </div>
 
     <div id="playerList"></div>
@@ -50,8 +50,6 @@
             currentPlayers = data;
             const list = document.getElementById('playerList');
             list.innerHTML = "";
-            
-            // 按名字排序顯示，方便管理
             const sortedNames = Object.keys(data).sort();
             
             for (let name of sortedNames) {
@@ -59,17 +57,18 @@
                 list.innerHTML += `
                     <div class="player-item">
                         <img src="${p.avatar}">
-                        <div style="width: 150px;"><strong>${name}</strong></div>
+                        <div style="width: 130px;"><strong>${name}</strong></div>
                         <div class="score-display">${p.score}</div>
                         
                         <div class="btn-group">
-                            <button class="btn-plus-big" onclick="updateScore('${name}', 10)">+10</button>
-                            <button class="btn-plus" onclick="updateScore('${name}', 5)">+5</button>
-                            <button class="btn-plus" onclick="updateScore('${name}', 1)">+1</button>
+                            <button class="btn-p20" onclick="updateScore('${name}', 20)">+20</button>
+                            <button class="btn-p10" onclick="updateScore('${name}', 10)">+10</button>
+                            <button class="btn-p5" onclick="updateScore('${name}', 5)">+5</button>
                             <span style="color: #666; margin: 0 5px;">|</span>
-                            <button class="btn-minus" onclick="updateScore('${name}', -5)">-5</button>
-                            <button class="btn-minus" onclick="updateScore('${name}', -1)">-1</button>
-                            <button class="btn-zero" onclick="setZero('${name}')">Reset 0</button>
+                            <button class="btn-m" onclick="updateScore('${name}', -5)">-5</button>
+                            <button class="btn-m" onclick="updateScore('${name}', -10)">-10</button>
+                            <button class="btn-m" onclick="updateScore('${name}', -20)">-20</button>
+                            <button class="btn-zero" onclick="setScore('${name}', 100)">回100</button>
                         </div>
 
                         <button class="btn-del" onclick="deletePlayer('${name}')">刪除</button>
@@ -81,21 +80,20 @@
             const name = document.getElementById('newName').value;
             const avatar = document.getElementById('newAvatar').value;
             if(!name) return alert("請輸入名字");
-            socket.emit('editPlayer', { name, score: 0, avatar });
+            // 傳送 isNew: true 讓後端給 100 分
+            socket.emit('editPlayer', { name, score: 100, avatar, isNew: true });
             document.getElementById('newName').value = "";
             document.getElementById('newAvatar').value = "";
         }
 
         function updateScore(name, delta) {
             const p = currentPlayers[name];
-            socket.emit('editPlayer', { name, score: p.score + delta, avatar: p.avatar });
+            socket.emit('editPlayer', { name, score: p.score + delta, avatar: p.avatar, isNew: false });
         }
 
-        function setZero(name) {
-            if(confirm(`將 ${name} 的分數歸零？`)) {
-                const p = currentPlayers[name];
-                socket.emit('editPlayer', { name, score: 0, avatar: p.avatar });
-            }
+        function setScore(name, target) {
+            const p = currentPlayers[name];
+            socket.emit('editPlayer', { name, score: target, avatar: p.avatar, isNew: false });
         }
 
         function deletePlayer(name) {
