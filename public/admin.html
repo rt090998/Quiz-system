@@ -1,19 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>計分後臺</title>
+    <title>智力王 - 專業管理後臺</title>
+    <meta charset="UTF-8">
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #222; color: white; }
-        .player-card { border: 1px solid #555; padding: 10px; margin: 10px 0; display: flex; align-items: center; gap: 15px; }
-        input { padding: 5px; }
+        body { font-family: 'Microsoft JhengHei', sans-serif; padding: 30px; background: #1a1a1a; color: white; }
+        .control-panel { background: #333; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #555; }
+        .player-item { 
+            display: flex; align-items: center; background: #444; 
+            padding: 15px; margin: 10px 0; border-radius: 8px; gap: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        input { padding: 10px; border-radius: 4px; border: none; font-size: 16px; }
+        button { padding: 8px 12px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; transition: 0.2s; }
+        button:hover { opacity: 0.8; transform: scale(1.05); }
+        
+        /* 掣嘅顏色設定 */
+        .btn-add { background: #28a745; color: white; }
+        .btn-reset-all { background: #ffc107; color: #333; margin-left: 10px; }
+        .btn-plus { background: #007bff; color: white; }
+        .btn-plus-big { background: #0056b3; color: white; border: 1px solid #fff; }
+        .btn-minus { background: #dc3545; color: white; }
+        .btn-zero { background: #6c757d; color: white; }
+        .btn-del { background: #343a40; color: #aaa; margin-left: auto; }
+
+        .score-display { font-size: 24px; width: 100px; text-align: center; color: #ffd700; font-family: 'Courier New', monospace; }
+        img { width: 60px; height: 60px; border-radius: 50%; background: #eee; object-fit: cover; border: 2px solid #777; }
+        .btn-group { display: flex; gap: 5px; align-items: center; }
     </style>
 </head>
 <body>
-    <h2>🏆 智力王計分後臺</h2>
-    <div style="background: #333; padding: 15px; border-radius: 8px;">
+    <h2>🏆 智力王直播後臺 - 強化版</h2>
+    
+    <div class="control-panel">
         <input type="text" id="newName" placeholder="玩家名字">
-        <input type="text" id="newAvatar" placeholder="頭像網址 (URL)">
-        <button onclick="addPlayer()">新增/更新玩家</button>
+        <input type="text" id="newAvatar" placeholder="頭像網址 (可留空)">
+        <button class="btn-add" onclick="addPlayer()">新增玩家</button>
+        <button class="btn-reset-all" onclick="if(confirm('確定要清空所有玩家同分數？')) socket.emit('resetAll')">清空全場</button>
     </div>
 
     <div id="playerList"></div>
@@ -21,44 +44,64 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        let localPlayers = {};
+        let currentPlayers = {};
 
         socket.on('updateData', (data) => {
-            localPlayers = data;
-            render();
-        });
-
-        function render() {
+            currentPlayers = data;
             const list = document.getElementById('playerList');
             list.innerHTML = "";
-            for (let name in localPlayers) {
-                const p = localPlayers[name];
+            
+            // 按名字排序顯示，方便管理
+            const sortedNames = Object.keys(data).sort();
+            
+            for (let name of sortedNames) {
+                const p = data[name];
                 list.innerHTML += `
-                    <div class="player-card">
-                        <img src="${p.avatar}" width="50" height="50">
-                        <strong>${name}</strong>
-                        <span>分數: ${p.score}</span>
-                        <button onclick="changeScore('${name}', 10)">+10</button>
-                        <button onclick="changeScore('${name}', -10)">-10</button>
-                        <button onclick="deleteP('${name}')" style="color:red">刪除</button>
+                    <div class="player-item">
+                        <img src="${p.avatar}">
+                        <div style="width: 150px;"><strong>${name}</strong></div>
+                        <div class="score-display">${p.score}</div>
+                        
+                        <div class="btn-group">
+                            <button class="btn-plus-big" onclick="updateScore('${name}', 10)">+10</button>
+                            <button class="btn-plus" onclick="updateScore('${name}', 5)">+5</button>
+                            <button class="btn-plus" onclick="updateScore('${name}', 1)">+1</button>
+                            <span style="color: #666; margin: 0 5px;">|</span>
+                            <button class="btn-minus" onclick="updateScore('${name}', -5)">-5</button>
+                            <button class="btn-minus" onclick="updateScore('${name}', -1)">-1</button>
+                            <button class="btn-zero" onclick="setZero('${name}')">Reset 0</button>
+                        </div>
+
+                        <button class="btn-del" onclick="deletePlayer('${name}')">刪除</button>
                     </div>`;
             }
-        }
+        });
 
         function addPlayer() {
             const name = document.getElementById('newName').value;
             const avatar = document.getElementById('newAvatar').value;
-            if(!name) return;
+            if(!name) return alert("請輸入名字");
             socket.emit('editPlayer', { name, score: 0, avatar });
+            document.getElementById('newName').value = "";
+            document.getElementById('newAvatar').value = "";
         }
 
-        function changeScore(name, delta) {
-            localPlayers[name].score += delta;
-            socket.emit('editPlayer', { name, ...localPlayers[name] });
+        function updateScore(name, delta) {
+            const p = currentPlayers[name];
+            socket.emit('editPlayer', { name, score: p.score + delta, avatar: p.avatar });
         }
 
-        function deleteP(name) {
-            socket.emit('deletePlayer', name);
+        function setZero(name) {
+            if(confirm(`將 ${name} 的分數歸零？`)) {
+                const p = currentPlayers[name];
+                socket.emit('editPlayer', { name, score: 0, avatar: p.avatar });
+            }
+        }
+
+        function deletePlayer(name) {
+            if(confirm(`確定刪除玩家 ${name}？`)) {
+                socket.emit('deletePlayer', name);
+            }
         }
     </script>
 </body>
