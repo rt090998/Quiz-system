@@ -2,38 +2,51 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fetch = require('node-fetch'); // <--- 1. 頂部加呢句
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// 存放玩家數據
 let players = {};
+
+// Google Sheet Web App URL (記得換成你部署嗰條)
+const GOOGLE_SHEET_URL = "你的網頁應用程式URL";
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ---------------------------------------------------------
+// 2. 加入定時備份邏輯 (放喺呢度)
+// ---------------------------------------------------------
+setInterval(() => {
+    if (Object.keys(players).length > 0) {
+        fetch(GOOGLE_SHEET_URL, {
+            method: 'POST',
+            body: JSON.stringify(players),
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => console.log('備份成功至 Google Sheet'))
+        .catch(err => console.error('備份失敗:', err));
+    }
+}, 30000); 
+// ---------------------------------------------------------
+
 io.on('connection', (socket) => {
-    // 新連線時發送現有數據
     socket.emit('updateData', players);
 
-// ... 前面代碼不變 ...
     socket.on('editPlayer', (data) => {
         players[data.name] = {
-            // 如果是新玩家（原本沒分），預設給 100 分，否則保留傳入的分數
             score: data.isNew ? 100 : parseInt(data.score),
             avatar: data.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=" + data.name
         };
         io.emit('updateData', players);
     });
-// ... 後面代碼不變 ...
 
-    // 處理刪除玩家
     socket.on('deletePlayer', (name) => {
         delete players[name];
         io.emit('updateData', players);
     });
 
-    // 處理清空所有數據 (新場次用)
     socket.on('resetAll', () => {
         players = {};
         io.emit('updateData', players);
