@@ -1,42 +1,124 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>計分大熒幕</title>
+    <title>智力王 - 可愛風計分板</title>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Arial Black', sans-serif; background: transparent; color: white; overflow: hidden; }
-        .container { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 50px; }
-        .card { 
-            background: rgba(0, 0, 0, 0.8); border: 4px solid gold; border-radius: 15px;
-            padding: 20px; width: 150px; text-align: center;
-            transition: all 0.5s ease; /* 分數變動時的平滑效果 */
+        /* 背景透明，方便 OBS 疊加 */
+        body { 
+            background: transparent; 
+            font-family: 'ZCOOL KuaiLe', 'Microsoft JhengHei', cursive; 
+            margin: 0; 
+            overflow: hidden; 
+            color: #444;
         }
-        .avatar { width: 100px; height: 100px; border-radius: 50%; border: 3px solid white; object-fit: cover; }
-        .score { font-size: 48px; color: gold; margin-top: 10px; }
-        .name { font-size: 20px; margin-top: 10px; }
+
+        .leaderboard { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            padding: 40px; 
+            width: 450px; 
+        }
+
+        .player-row { 
+            display: flex; 
+            align-items: center; 
+            background: rgba(255, 255, 255, 0.9); /* 半透明白色背景 */
+            border: 4px solid #FFB6C1; /* 粉紅色邊框 */
+            padding: 12px 25px; 
+            border-radius: 50px; /* 超圓角效果 */
+            box-shadow: 0 8px 0px #FFB6C1; /* 卡通風立體陰影 */
+            transform: translateX(-100%); 
+            animation: slideIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        @keyframes slideIn { 
+            to { transform: translateX(0); } 
+        }
+
+        /* 排名第一名的特殊樣式 */
+        .player-row:first-child {
+            border-color: #FFD700;
+            box-shadow: 0 8px 0px #F0C000;
+            background: #FFFBE6;
+            transform: scale(1.1);
+            margin-bottom: 10px;
+        }
+
+        .player-row:first-child::after {
+            content: "👑";
+            position: absolute;
+            left: -15px;
+            top: -15px;
+            font-size: 40px;
+            transform: rotate(-20deg);
+        }
+
+        .avatar { 
+            width: 70px; 
+            height: 70px; 
+            border-radius: 50%; 
+            border: 4px solid #FFF; 
+            margin-right: 20px; 
+            background: #FFE4E1;
+            object-fit: cover;
+        }
+
+        .name { 
+            flex-grow: 1; 
+            font-size: 28px; 
+            color: #FF69B4; /* 深粉色 */
+            font-weight: bold;
+        }
+
+        .score { 
+            font-size: 42px; 
+            color: #FF8C00; /* 橙色 */
+            font-weight: bold;
+            text-shadow: 2px 2px 0px #FFF;
+        }
+
+        /* 當分數變動時的晃動效果 */
+        .score-pop {
+            animation: pop 0.3s ease;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); color: #FF4500; }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
-    <div class="container" id="display"></div>
+    <div class="leaderboard" id="board"></div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        socket.on('updateData', (players) => {
-            const display = document.getElementById('display');
-            display.innerHTML = "";
-            
-            // 將玩家按分數高低排序
-            const sortedNames = Object.keys(players).sort((a, b) => players[b].score - players[a].score);
+        let oldScores = {};
 
-            sortedNames.forEach(name => {
+        socket.on('updateData', (players) => {
+            const board = document.getElementById('board');
+            const sorted = Object.keys(players).sort((a, b) => players[b].score - players[a].score);
+            
+            board.innerHTML = sorted.map(name => {
                 const p = players[name];
-                display.innerHTML += `
-                    <div class="card">
+                const scoreClass = (oldScores[name] !== undefined && oldScores[name] !== p.score) ? 'score-pop' : '';
+                oldScores[name] = p.score;
+
+                return `
+                    <div class="player-row">
                         <img class="avatar" src="${p.avatar}">
                         <div class="name">${name}</div>
-                        <div class="score">${p.score}</div>
-                    </div>`;
-            });
+                        <div class="score ${scoreClass}">${p.score}</div>
+                    </div>
+                `;
+            }).join('');
         });
     </script>
 </body>
