@@ -1,51 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>智力王 - 2x2 粉紅計分板</title>
+    <title>智力王 - 1080p 2x2 計分板</title>
     <meta charset="UTF-8">
     <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <style>
+        /* 讓 Body 撐滿全螢幕並置中 */
         body { 
             background: transparent; 
             font-family: 'ZCOOL KuaiLe', 'Microsoft JhengHei', cursive; 
             margin: 0; 
-            overflow: hidden; 
+            padding: 0;
+            width: 1920px;
+            height: 1080px;
+            display: flex;
+            justify-content: center; /* 水平置中 */
+            align-items: center;     /* 垂直置中 */
+            overflow: hidden;
         }
 
-        /* 改用 Grid 佈局 */
+        /* 2x2 網格容器 */
         .leaderboard { 
             display: grid;
-            /* 定義兩欄，每欄寬度平均分配 */
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 20px; 
-            padding: 20px; 
-            width: 800px; /* 闊度加大以容納兩列 */
+            grid-template-columns: repeat(2, 1fr); /* 兩欄 */
+            grid-template-rows: repeat(2, 1fr);    /* 兩列 */
+            gap: 60px;          /* 元件之間的間距 */
+            padding: 50px;
+            width: 90%;         /* 佔據 90% 寬度，保留四週呼吸空間 */
+            max-width: 1600px;  /* 限製最大寬度避免過於拉伸 */
         }
 
         .player-row { 
             display: flex; 
             align-items: center; 
             background: rgba(255, 255, 255, 0.95);
-            border: 4px solid #FFB6C1; 
-            padding: 10px 20px; 
-            border-radius: 50px; 
-            box-shadow: 0 6px 0px #FFB6C1; 
-            transition: all 0.3s ease;
+            border: 8px solid #FFB6C1; /* 邊框加粗適配大螢幕 */
+            padding: 30px 50px;        /* 增加內部空間 */
+            border-radius: 100px;      /* 更圓潤的膠囊造型 */
+            box-shadow: 0 15px 0px #FFB6C1; /* 加強立體陰影 */
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .avatar { 
-            width: 50px; 
-            height: 50px; 
+            width: 140px;      /* 頭像大幅放大 */
+            height: 140px; 
             border-radius: 50%; 
-            border: 3px solid #FFF; 
-            margin-right: 12px; 
+            border: 6px solid #FFF; 
+            margin-right: 30px; 
             background: #FFE4E1;
             object-fit: cover;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .name { 
             flex-grow: 1; 
-            font-size: 22px; 
+            font-size: 56px;   /* 名字放大 */
             color: #FF69B4; 
             font-weight: bold;
             white-space: nowrap;
@@ -54,19 +63,28 @@
         }
 
         .score { 
-            font-size: 32px; 
+            font-size: 80px;   /* 分數大幅放大，讓觀眾一眼看到 */
             color: #FF69B4; 
             font-weight: bold;
-            text-shadow: 2px 2px 0px #FFF;
-            margin-left: 10px;
+            text-shadow: 4px 4px 0px #FFF;
+            margin-left: 20px;
         }
 
-        /* 得分動畫 */
-        .score-pop { animation: pop 0.3s ease; }
+        /* 分數變動特效 */
+        .score-pop { animation: pop 0.4s ease; }
         @keyframes pop {
             0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
+            50% { transform: scale(1.3); }
             100% { transform: scale(1); }
+        }
+
+        /* 簡單的進場動畫 */
+        .player-row {
+            animation: fadeIn 0.8s ease backwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -80,16 +98,15 @@
 
         socket.on('updateData', (players) => {
             const board = document.getElementById('board');
-            // 依然按分數排序，但會填滿 2x2 空間
             const sorted = Object.keys(players).sort((a, b) => players[b].score - players[a].score);
             
-            board.innerHTML = sorted.map(name => {
+            board.innerHTML = sorted.map((name, index) => {
                 const p = players[name];
                 const scoreClass = (oldScores[name] !== undefined && oldScores[name] !== p.score) ? 'score-pop' : '';
                 oldScores[name] = p.score;
 
                 return `
-                    <div class="player-row">
+                    <div class="player-row" style="animation-delay: ${index * 0.1}s">
                         <img class="avatar" src="${p.avatar}">
                         <div class="name">${name}</div>
                         <div class="score ${scoreClass}">${p.score}</div>
