@@ -8,7 +8,25 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-let players = {};
+// 預設 4 位蛇蛇玩家
+let players = {
+    "黃蛇": {
+        score: 0,
+        avatar: "https://i.meee.com.tw/c4JfOXH.png"
+    },
+    "杜蛇": {
+        score: 0,
+        avatar: "https://meee.com.tw/bDObnoO.png"
+    },
+    "非凡蛇": {
+        score: 0,
+        avatar: "https://meee.com.tw/ySjuy2x.png"
+    },
+    "Kuma": {
+        score: 0,
+        avatar: "https://meee.com.tw/x7iiaJl.png"
+    }
+};
 
 // Google Sheet Web App URL (記得換成你部署嗰條)
 const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzL9HML3uzz4CxB3_G9y51qGIDhCSal1DKMhkWMyPf7DmIG-35OxmoRDmSuuNB6iM7s/exec";
