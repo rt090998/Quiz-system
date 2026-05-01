@@ -36,17 +36,47 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ---------------------------------------------------------
 // 2. 加入定時備份邏輯 (放喺呢度)
 // ---------------------------------------------------------
-setInterval(() => {
+// 1. 建立一個統一的備份函式
+function sendBackup() {
     if (Object.keys(players).length > 0) {
         fetch(GOOGLE_SHEET_URL, {
             method: 'POST',
             body: JSON.stringify(players),
             headers: { 'Content-Type': 'application/json' }
         })
-        .then(res => console.log('備份成功至 Google Sheet'))
+        .then(res => console.log('數據更新，已自動備份至 Google Sheet'))
         .catch(err => console.error('備份失敗:', err));
     }
-}, 30000); 
+}
+
+// 2. 修改 Socket 邏輯，喺每個動作之後呼叫 sendBackup()
+io.on('connection', (socket) => {
+    socket.emit('updateData', players);
+
+    // 當有玩家資料更新 (加減分、改名、換頭像)
+    socket.on('editPlayer', (data) => {
+        players[data.name] = {
+            score: data.isNew ? 100 : parseInt(data.score),
+            avatar: data.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=" + data.name
+        };
+        io.emit('updateData', players);
+        sendBackup(); // <--- 觸發備份
+    });
+
+    // 當刪除玩家
+    socket.on('deletePlayer', (name) => {
+        delete players[name];
+        io.emit('updateData', players);
+        sendBackup(); // <--- 觸發備份
+    });
+
+    // 當清空全場
+    socket.on('resetAll', () => {
+        players = {};
+        io.emit('updateData', players);
+        sendBackup(); // <--- 觸發備份
+    });
+});
 // ---------------------------------------------------------
 
 io.on('connection', (socket) => {
