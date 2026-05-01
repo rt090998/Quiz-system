@@ -12,19 +12,19 @@ const io = new Server(server);
 let players = {
     "黃蛇": {
         score: 0,
-        avatar: "https://i.meee.com.tw/c4JfOXH.png"
+        avatar: "https://i.ibb.co/93GdHwk8/icon-Wong-Sir.png"
     },
     "杜蛇": {
         score: 0,
-        avatar: "https://meee.com.tw/bDObnoO.png"
+        avatar: "https://i.ibb.co/8Lv8tLf2/icon-To-Sir.png"
     },
     "非凡蛇": {
         score: 0,
-        avatar: "https://meee.com.tw/ySjuy2x.png"
+        avatar: "https://i.ibb.co/YT8hcQTw/icon-Feifan-Sir.png"
     },
     "Kuma": {
         score: 0,
-        avatar: "https://meee.com.tw/x7iiaJl.png"
+        avatar: "https://i.ibb.co/fdgC94rY/icon-Kuma.png"
     }
 };
 
